@@ -131,7 +131,11 @@ def main():
         print(" Nodes expanded:", res["expanded"])
 
     with open("results.json", "w") as f:
-        json.dump(results, f, indent=4)
+        compact = json.dumps(results, separators=(",", ":"))
+
+        pretty = compact.replace("{", "{\n\n    ").replace("}", "\n\n}").replace(",", ", ").replace("]],", "]],\n    ").replace("},","},\n")
+
+        f.write(pretty)
 
 
 if __name__ == "__main__":
