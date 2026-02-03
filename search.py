@@ -1,6 +1,7 @@
 import random
 import heapq
 import json
+import time
 from collections import deque
 
 class Grid:
@@ -41,17 +42,34 @@ def reconstruct_path(parent, start, goal):
     path.append(start)
     return list(reversed(path))
 
+# ---------------- BFS ----------------
 def bfs(grid):
+    start_time = time.time()
+
     frontier = deque([grid.start])
     explored = set()
     parent = {}
+    generated = 1
+    max_frontier = 1
 
     while frontier:
+        max_frontier = max(max_frontier, len(frontier))
         node = frontier.popleft()
+
         if node == grid.goal:
+            end_time = time.time()
             path = reconstruct_path(parent, grid.start, grid.goal)
             cost = sum(grid.cost(path[i], path[i+1]) for i in range(len(path)-1))
-            return {"path": path, "cost": cost, "expanded": len(explored)}
+            return {
+                "path": path,
+                "steps": len(path) - 1,
+                "total_cost": cost,
+                "expanded": len(explored),
+                "generated": generated,
+                "max_frontier": max_frontier,
+                "runtime_ms": (end_time - start_time) * 1000,
+                "status": "success"
+            }
 
         explored.add(node)
 
@@ -59,20 +77,48 @@ def bfs(grid):
             if nbr not in explored and nbr not in frontier:
                 parent[nbr] = node
                 frontier.append(nbr)
+                generated += 1
 
-    return None
+    end_time = time.time()
+    return {
+        "path": [],
+        "steps": 0,
+        "total_cost": 0,
+        "expanded": len(explored),
+        "generated": generated,
+        "max_frontier": max_frontier,
+        "runtime_ms": (end_time - start_time) * 1000,
+        "status": "failure"
+    }
 
+# ---------------- DFS ----------------
 def dfs(grid):
+    start_time = time.time()
+
     frontier = [grid.start]
     explored = set()
     parent = {}
+    generated = 1
+    max_frontier = 1
 
     while frontier:
+        max_frontier = max(max_frontier, len(frontier))
         node = frontier.pop()
+
         if node == grid.goal:
+            end_time = time.time()
             path = reconstruct_path(parent, grid.start, grid.goal)
             cost = sum(grid.cost(path[i], path[i+1]) for i in range(len(path)-1))
-            return {"path": path, "cost": cost, "expanded": len(explored)}
+            return {
+                "path": path,
+                "steps": len(path) - 1,
+                "total_cost": cost,
+                "expanded": len(explored),
+                "generated": generated,
+                "max_frontier": max_frontier,
+                "runtime_ms": (end_time - start_time) * 1000,
+                "status": "success"
+            }
 
         explored.add(node)
 
@@ -80,21 +126,48 @@ def dfs(grid):
             if nbr not in explored and nbr not in frontier:
                 parent[nbr] = node
                 frontier.append(nbr)
+                generated += 1
 
-    return None
+    end_time = time.time()
+    return {
+        "path": [],
+        "steps": 0,
+        "total_cost": 0,
+        "expanded": len(explored),
+        "generated": generated,
+        "max_frontier": max_frontier,
+        "runtime_ms": (end_time - start_time) * 1000,
+        "status": "failure"
+    }
 
+# ---------------- UCS ----------------
 def ucs(grid):
+    start_time = time.time()
+
     frontier = [(0, grid.start)]
     explored = set()
     parent = {}
     cost_so_far = {grid.start: 0}
+    generated = 1
+    max_frontier = 1
 
     while frontier:
+        max_frontier = max(max_frontier, len(frontier))
         curr_cost, node = heapq.heappop(frontier)
 
         if node == grid.goal:
+            end_time = time.time()
             path = reconstruct_path(parent, grid.start, grid.goal)
-            return {"path": path, "cost": curr_cost, "expanded": len(explored)}
+            return {
+                "path": path,
+                "steps": len(path) - 1,
+                "total_cost": curr_cost,
+                "expanded": len(explored),
+                "generated": generated,
+                "max_frontier": max_frontier,
+                "runtime_ms": (end_time - start_time) * 1000,
+                "status": "success"
+            }
 
         if node in explored:
             continue
@@ -107,9 +180,21 @@ def ucs(grid):
                 cost_so_far[nbr] = new_cost
                 parent[nbr] = node
                 heapq.heappush(frontier, (new_cost, nbr))
+                generated += 1
 
-    return None
+    end_time = time.time()
+    return {
+        "path": [],
+        "steps": 0,
+        "total_cost": 0,
+        "expanded": len(explored),
+        "generated": generated,
+        "max_frontier": max_frontier,
+        "runtime_ms": (end_time - start_time) * 1000,
+        "status": "failure"
+    }
 
+# ---------------- MAIN ----------------
 def main():
     print("\n--- Grid Search Program ---\n")
 
@@ -141,23 +226,40 @@ def main():
         print("Invalid algorithm.")
         return
 
+    # Print results
     print("\nAlgorithm:", algorithm.upper())
     print("Path:", result["path"])
-    print("Cost:", result["cost"])
-    print("Nodes expanded:", result["expanded"])
+    print("Steps:", result["steps"])
+    print("Total cost:", result["total_cost"])
+    print("Expanded states:", result["expanded"])
+    print("Generated nodes:", result["generated"])
+    print("Max frontier size:", result["max_frontier"])
+    print("Runtime (ms):", result["runtime_ms"])
+    print("Status:", result["status"])
 
-    results = {
-        "seed": seed,
+    # Build JSON
+    output = {
         "algorithm": algorithm,
+        "m": m,
+        "n": n,
+        "start": [rs, cs],
+        "goal": [rg, cg],
+        "min_cost": min_cost,
+        "max_cost": max_cost,
+        "seed": seed,
         "path": result["path"],
-        "cost": result["cost"],
-        "expanded": result["expanded"]
+        "steps": result["steps"],
+        "total_cost": result["total_cost"],
+        "expanded": result["expanded"],
+        "generated": result["generated"],
+        "max_frontier_size": result["max_frontier"],
+        "runtime_ms": result["runtime_ms"],
+        "status": result["status"]
     }
 
+    # A2 formatting: compact arrays + clean indentation
     with open("results.json", "w") as f:
-        compact = json.dumps(results, separators=(",", ":"))
-        pretty = compact.replace("{", "{\n\n    ").replace("}", "\n\n}").replace(",", ", ").replace("]],", "]],\n    ").replace("},","},\n")
-        f.write(pretty)
+        json.dump(output, f, indent=4, separators=(",", ": "))
 
 if __name__ == "__main__":
     main()
