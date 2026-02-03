@@ -160,7 +160,7 @@ def ucs(grid):
     frontier = [(0, grid.start)]
     explored = set()
     parent = {}
-    best_cost = {grid.start: 0}  # bestCost map
+    best_cost = {grid.start: 0}
     generated = 1
     max_frontier = 1
 
@@ -386,7 +386,7 @@ def main():
         "total_cost": result["total_cost"],
         "expanded_states": result["expanded"],
         "generated_nodes": result["generated"],
-        "max_frontier_size": result["max_frontrier"] if "max_frontrier" in result else result["max_frontier"],
+        "max_frontier_size": result["max_frontier"] if "max_frontier" in result else result["max_frontier"],
         "runtime_ms": result["runtime_ms"],
         "status": result["status"],
     }
