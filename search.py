@@ -194,9 +194,102 @@ def ucs(grid):
         "status": "failure"
     }
 
-# ---------------- MAIN ----------------
-def main():
-    print("\n--- Grid Search Program ---\n")
+
+# TESTS
+def is_legal_move_sequence(grid, path):
+    if not path:
+        return False
+    for i in range(len(path) - 1):
+        r1, c1 = path[i]
+        r2, c2 = path[i + 1]
+        dr = abs(r1 - r2)
+        dc = abs(c1 - c2)
+        if dr + dc != 1:
+            return False
+        if not (0 <= r2 < grid.m and 0 <= c2 < grid.n):
+            return False
+    return True
+
+
+def test_path_start_end():
+    m, n = 5, 5
+    start = (0, 0)
+    goal = (4, 4)
+    min_cost, max_cost = 1, 5
+    seed = 42
+    random.seed(seed)
+    grid = Grid(m, n, start, goal, min_cost, max_cost)
+
+    for algo in (bfs, dfs, ucs):
+        result = algo(grid)
+        path = result["path"]
+        assert path[0] == start, f"{algo.__name__}: path does not start at S"
+        assert path[-1] == goal, f"{algo.__name__}: path does not end at G"
+
+
+def test_legal_moves():
+    m, n = 5, 5
+    start = (0, 0)
+    goal = (4, 4)
+    min_cost, max_cost = 1, 5
+    seed = 123
+    random.seed(seed)
+    grid = Grid(m, n, start, goal, min_cost, max_cost)
+
+    for algo in (bfs, dfs, ucs):
+        result = algo(grid)
+        path = result["path"]
+        assert is_legal_move_sequence(grid, path), f"{algo.__name__}: illegal move in path"
+
+
+def test_ucs_cost_matches():
+    m, n = 5, 5
+    start = (0, 0)
+    goal = (4, 4)
+    min_cost, max_cost = 1, 10
+    seed = 999
+    random.seed(seed)
+    grid = Grid(m, n, start, goal, min_cost, max_cost)
+
+    result = ucs(grid)
+    path = result["path"]
+    reported_cost = result["total_cost"]
+    recomputed_cost = sum(grid.cost(path[i], path[i + 1]) for i in range(len(path) - 1))
+    assert (
+            reported_cost == recomputed_cost
+    ), f"UCS cost mismatch: reported {reported_cost}, recomputed {recomputed_cost}"
+
+
+def run_tests():
+    print("Running tests...")
+    test_path_start_end()
+    print("path starts at S and ends at G")
+    test_legal_moves()
+    print("every move in path is legal")
+    test_ucs_cost_matches()
+    print("UCS total cost matches recomputed path cost")
+    print("All tests passed.")
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Grid Navigation Search Agent (BFS/DFS/UCS)")
+    parser.add_argument("--m", type=int, help="Grid rows")
+    parser.add_argument("--n", type=int, help="Grid columns")
+    parser.add_argument("--rs", type=int, help="Start row")
+    parser.add_argument("--cs", type=int, help="Start column")
+    parser.add_argument("--rg", type=int, help="Goal row")
+    parser.add_argument("--cg", type=int, help="Goal column")
+    parser.add_argument("--min_cost", type=int, help="Minimum move cost")
+    parser.add_argument("--max_cost", type=int, help="Maximum move cost")
+    parser.add_argument("--seed", type=int, help="Random seed")
+    parser.add_argument("--algorithm", type=str, choices=["bfs", "dfs", "ucs"], help="Search algorithm")
+    parser.add_argument("--run-tests", action="store_true", help="Run unit tests and exit")
+    parser.add_argument("--output", type=str, default="results.json", help="Output JSON filename")
+    return parser.parse_args()
+
+
+def interactive_inputs():
+    print("\n--- Grid Search Program (Interactive Mode) ---\n")
 
     m = int(input("Enter grid rows (m): "))
     n = int(input("Enter grid columns (n): "))
