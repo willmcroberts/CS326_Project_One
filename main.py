@@ -1,6 +1,7 @@
 import random
 import heapq
 import json
+import sys
 from collections import deque
 
 class Grid:
@@ -115,16 +116,23 @@ def ucs(grid):
     return None
 
 def main():
+    seed = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+    random.seed(seed)
+
     m, n = 5, 5
     grid = Grid(m, n)
 
     results = {
+        "seed": seed,
         "BFS": bfs(grid),
         "DFS": dfs(grid),
         "UCS": ucs(grid)
     }
 
     for algo, res in results.items():
+        if algo == "seed":
+            print("\nSeed:", res)
+            continue
         print(f"\n{algo}:")
         print(" Path:", res["path"])
         print(" Cost:", res["cost"])
@@ -132,9 +140,7 @@ def main():
 
     with open("results.json", "w") as f:
         compact = json.dumps(results, separators=(",", ":"))
-
         pretty = compact.replace("{", "{\n\n    ").replace("}", "\n\n}").replace(",", ", ").replace("]],", "]],\n    ").replace("},","},\n")
-
         f.write(pretty)
 
 
