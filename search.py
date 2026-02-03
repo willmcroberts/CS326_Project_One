@@ -276,14 +276,12 @@ def test_ucs_cost_matches():
 
 
 def run_tests():
-    print("Running tests...")
     test_path_start_end()
     print("path starts at S and ends at G")
     test_legal_moves()
     print("every move in path is legal")
     test_ucs_cost_matches()
     print("UCS total cost matches recomputed path cost")
-    print("All tests passed.")
 
 
 def parse_args():
@@ -303,11 +301,10 @@ def parse_args():
     return parser.parse_args()
 
 
-def interactive_inputs():
-    print("\n--- Grid Search Program (Interactive Mode) ---\n")
+def command_line():
 
-    m = int(input("Enter grid rows (m): "))
-    n = int(input("Enter grid columns (n): "))
+    m = int(input("Enter grid rows: "))
+    n = int(input("Enter grid columns: "))
 
     rs = int(input("Enter start row: "))
     cs = int(input("Enter start column: "))
@@ -333,7 +330,7 @@ def main():
 
     if None in (args.m, args.n, args.rs, args.cs, args.rg, args.cg,
                 args.min_cost, args.max_cost, args.seed, args.algorithm):
-        m, n, rs, cs, rg, cg, min_cost, max_cost, seed, algorithm = interactive_inputs()
+        m, n, rs, cs, rg, cg, min_cost, max_cost, seed, algorithm = command_line()
         output_file = "results.json"
     else:
         m = args.m
