@@ -303,6 +303,36 @@ def interactive_inputs():
     max_cost = int(input("Enter maximum move cost: "))
 
     seed = int(input("Enter random seed: "))
+
+    algorithm = input("Enter algorithm (bfs, dfs, ucs): ").lower()
+
+    return m, n, rs, cs, rg, cg, min_cost, max_cost, seed, algorithm
+
+
+def main():
+    args = parse_args()
+
+    if args.run_tests:
+        run_tests()
+        return
+
+    if None in (args.m, args.n, args.rs, args.cs, args.rg, args.cg,
+                args.min_cost, args.max_cost, args.seed, args.algorithm):
+        m, n, rs, cs, rg, cg, min_cost, max_cost, seed, algorithm = interactive_inputs()
+        output_file = "results.json"
+    else:
+        m = args.m
+        n = args.n
+        rs = args.rs
+        cs = args.cs
+        rg = args.rg
+        cg = args.cg
+        min_cost = args.min_cost
+        max_cost = args.max_cost
+        seed = args.seed
+        algorithm = args.algorithm.lower()
+        output_file = args.output
+
     random.seed(seed)
 
     algorithm = input("Enter algorithm (bfs, dfs, ucs): ").lower()
