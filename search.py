@@ -1,15 +1,16 @@
 import random
 import heapq
 import json
-import sys
 from collections import deque
 
 class Grid:
-    def __init__(self, m, n):
+    def __init__(self, m, n, start, goal, min_cost, max_cost):
         self.m = m
         self.n = n
-        self.start = (0, 0)
-        self.goal = (m - 1, n - 1)
+        self.start = start
+        self.goal = goal
+        self.min_cost = min_cost
+        self.max_cost = max_cost
         self.costs = {}
         self._assign_costs()
 
@@ -19,7 +20,7 @@ class Grid:
                 for dr, dc in [(1,0), (-1,0), (0,1), (0,-1)]:
                     nr, nc = r + dr, c + dc
                     if 0 <= nr < self.m and 0 <= nc < self.n:
-                        self.costs[((r,c),(nr,nc))] = random.randint(1, 10)
+                        self.costs[((r,c),(nr,nc))] = random.randint(self.min_cost, self.max_cost)
 
     def neighbors(self, node):
         r, c = node
@@ -40,8 +41,6 @@ def reconstruct_path(parent, start, goal):
     path.append(start)
     return list(reversed(path))
 
-
-# ---------------- BFS ----------------
 def bfs(grid):
     frontier = deque([grid.start])
     explored = set()
@@ -63,8 +62,6 @@ def bfs(grid):
 
     return None
 
-
-# ---------------- DFS ----------------
 def dfs(grid):
     frontier = [grid.start]
     explored = set()
@@ -86,8 +83,6 @@ def dfs(grid):
 
     return None
 
-
-# ---------------- UCS ----------------
 def ucs(grid):
     frontier = [(0, grid.start)]
     explored = set()
@@ -116,33 +111,53 @@ def ucs(grid):
     return None
 
 def main():
-    seed = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+    print("\n--- Grid Search Program ---\n")
+
+    m = int(input("Enter grid rows (m): "))
+    n = int(input("Enter grid columns (n): "))
+
+    rs = int(input("Enter start row: "))
+    cs = int(input("Enter start column: "))
+    rg = int(input("Enter goal row: "))
+    cg = int(input("Enter goal column: "))
+
+    min_cost = int(input("Enter minimum move cost: "))
+    max_cost = int(input("Enter maximum move cost: "))
+
+    seed = int(input("Enter random seed: "))
     random.seed(seed)
 
-    m, n = 5, 5
-    grid = Grid(m, n)
+    algorithm = input("Enter algorithm (bfs, dfs, ucs): ").lower()
+
+    grid = Grid(m, n, (rs, cs), (rg, cg), min_cost, max_cost)
+
+    if algorithm == "bfs":
+        result = bfs(grid)
+    elif algorithm == "dfs":
+        result = dfs(grid)
+    elif algorithm == "ucs":
+        result = ucs(grid)
+    else:
+        print("Invalid algorithm.")
+        return
+
+    print("\nAlgorithm:", algorithm.upper())
+    print("Path:", result["path"])
+    print("Cost:", result["cost"])
+    print("Nodes expanded:", result["expanded"])
 
     results = {
         "seed": seed,
-        "BFS": bfs(grid),
-        "DFS": dfs(grid),
-        "UCS": ucs(grid)
+        "algorithm": algorithm,
+        "path": result["path"],
+        "cost": result["cost"],
+        "expanded": result["expanded"]
     }
-
-    for algo, res in results.items():
-        if algo == "seed":
-            print("\nSeed:", res)
-            continue
-        print(f"\n{algo}:")
-        print(" Path:", res["path"])
-        print(" Cost:", res["cost"])
-        print(" Nodes expanded:", res["expanded"])
 
     with open("results.json", "w") as f:
         compact = json.dumps(results, separators=(",", ":"))
         pretty = compact.replace("{", "{\n\n    ").replace("}", "\n\n}").replace(",", ", ").replace("]],", "]],\n    ").replace("},","},\n")
         f.write(pretty)
-
 
 if __name__ == "__main__":
     main()
